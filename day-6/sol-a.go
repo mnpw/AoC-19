@@ -25,8 +25,6 @@ func main() {
 		fmt.Println("Contents: \n", ip)
 	}
 
-	parent := make(map[string]parentNode)
-
 	graph := make(map[string][]string)
 
 	for i := 0; i < len(ip); i++ {
@@ -35,10 +33,10 @@ func main() {
 		par := ip[i][:sep]
 		chl := ip[i][sep+1:]
 		graph[par] = append(graph[par], chl)
-		parent[chl] = parentNode{par, 0}
+		graph[chl] = append(graph[chl], par)
 	}
 
-	curr := "COM"
+	curr := "YOU"
 	fmt.Println(graph[curr])
 
 	added := make(map[string]int)
@@ -66,6 +64,5 @@ func main() {
 
 	}
 
-	fmt.Println(checksum)
-
+	fmt.Println(orbitCount["SAN"] - 2)
 }
