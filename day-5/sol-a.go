@@ -21,8 +21,10 @@ func modeResolver(contents []int, pos int, mode string) int {
 
 func intcodeProcess(contents []int) int {
 	exit := false
+
 	for i := 0; i < len(contents); {
 
+		iUpdate := true
 		op := strconv.Itoa(contents[i])
 		fmt.Println("->", contents[i])
 		op = strings.Repeat("0", 5-len(op)) + op
@@ -41,27 +43,72 @@ func intcodeProcess(contents []int) int {
 			c := modeResolver(contents, i+1, op_c) + modeResolver(contents, i+2, op_b)
 			contents[contents[i+3]] = c
 			jump = 4
+
 		case "02":
 			//multiply
 			c := modeResolver(contents, i+1, op_c) * modeResolver(contents, i+2, op_b)
 			contents[contents[i+3]] = c
 			jump = 4
+
 		case "03":
 			//read
-			contents[contents[i+1]] = 1
+			contents[contents[i+1]] = 5
 			jump = 2
+
 		case "04":
 			//write
-			fmt.Println("OP 4 at i = ", i, ". Value is ", contents[contents[i+1]], ".")
+			fmt.Println(contents[contents[i+1]])
 			jump = 2
+
+		case "05":
+			//jump-if-true
+			c := modeResolver(contents, i+1, op_c)
+			if c != 0 {
+				i = modeResolver(contents, i+2, op_b)
+				iUpdate = false
+			}
+			jump = 3
+
+		case "06":
+			//jump-if-false
+			c := modeResolver(contents, i+1, op_c)
+			if c == 0 {
+				i = modeResolver(contents, i+2, op_b)
+				iUpdate = false
+			}
+			jump = 3
+
+		case "07":
+			//less-than
+			tpFlag := modeResolver(contents, i+1, op_c) < modeResolver(contents, i+2, op_b)
+			if tpFlag {
+				contents[contents[i+3]] = 1
+			} else {
+				contents[contents[i+3]] = 0
+			}
+			jump = 4
+
+		case "08":
+			//equals
+			tpFlag := modeResolver(contents, i+1, op_c) == modeResolver(contents, i+2, op_b)
+			if tpFlag {
+				contents[contents[i+3]] = 1
+			} else {
+				contents[contents[i+3]] = 0
+			}
+			jump = 4
+
 		case "99":
 			fmt.Println("Terminating. Exit code 1.")
 			exit = true
+
 		default:
 			fmt.Println("Encountered invalid opcode. Val: ", op, contents[i])
 		}
 
-		i += jump
+		if iUpdate {
+			i += jump
+		}
 		if exit == true {
 			break
 		}
