@@ -18,13 +18,16 @@ func modeResolver(contents []int, pos int, mode string) int {
 	return contents[contents[pos]]
 }
 
-func intcodeProcess(contents []int, phase int, input int, db int, insPtr ...int) int {
+func intcodeProcess(id int, insPtr int, ampState []int, input [][]int, inputPtr int, db int) (bool, int, []int, int, int) {
 	var ampOut int
 	exit := false
-	applyPhase := true
-	//applyInput is !applyPhase
-	for i := 0; i < len(contents); {
-
+	ret := false
+	contents := make([]int, 0)
+	contents = append(contents, ampState...)
+	//applyInput is !usePhase
+	for i := insPtr; i < len(contents); {
+		// time.Sleep(1000 * time.Millisecond)
+		// fmt.Println(contents)
 		iUpdate := true
 		op := strconv.Itoa(contents[i])
 		if db != 0 {
@@ -55,11 +58,11 @@ func intcodeProcess(contents []int, phase int, input int, db int, insPtr ...int)
 
 		case "03":
 			//read
-			if applyPhase {
-				contents[contents[i+1]] = phase
-				applyPhase = false
+			if inputPtr < len(input[id]) {
+				contents[contents[i+1]] = input[id][inputPtr]
+				inputPtr++
 			} else {
-				contents[contents[i+1]] = input
+				break
 			}
 			jump = 2
 
@@ -69,6 +72,7 @@ func intcodeProcess(contents []int, phase int, input int, db int, insPtr ...int)
 				fmt.Println("ampOutput is ", contents[contents[i+1]])
 			}
 			ampOut = contents[contents[i+1]]
+			ret = true
 			jump = 2
 
 		case "05":
@@ -122,12 +126,12 @@ func intcodeProcess(contents []int, phase int, input int, db int, insPtr ...int)
 		if iUpdate {
 			i += jump
 		}
-		if exit == true {
-			// insPtr = i
+		insPtr = i
+		if exit == true || ret == true {
 			break
 		}
 	}
-	return ampOut
+	return exit, insPtr, contents, ampOut, inputPtr
 }
 
 func modSlice(sl *[]string) {
@@ -182,19 +186,53 @@ func main() {
 		val, _ := strconv.Atoi(ip[i])
 		contents = append(contents, val)
 	}
+	fmt.Println(len(contents))
+	ampCount := 5
+	var tmp = []string{"5", "6", "7", "8", "9"}
 
-	var tmp = []string{"0", "1", "2", "3", "4"}
 	permutations := genPermutation(tmp)
-	// fmt.Println(len(permutations), permutations)
+	// permutations := make([][]string, 0)
+	// permutations = append(permutations, []string{"9", "8", "7", "6", "5"})
 	maxOutput := 0
+
 	for i := 0; i < len(permutations); i++ {
-		currInput := 0
-		for j := 0; j < 5; j++ {
+		// fmt.Println("i:", i)
+		output := 0
+
+		ampStates := make([][]int, ampCount)
+		ampPtrs := make([]int, ampCount)
+		ampIps := make([][]int, ampCount)
+		ampIpId := make([]int, ampCount)
+		for j := 0; j < ampCount; j++ {
+			ampStates[j] = make([]int, len(contents))
+			copy(ampStates[j], contents)
+			ampPtrs[j] = 0
+			ampIps[j] = make([]int, 1)
 			phase, _ := strconv.Atoi(permutations[i][j])
-			currInput = intcodeProcess(contents, phase, currInput, 0)
+			ampIps[j][0] = phase
+			if j == 0 {
+				ampIps[0] = append(ampIps[0], 0)
+			}
+			ampIpId[j] = 0
 		}
-		if maxOutput < currInput {
-			maxOutput = currInput
+
+		x := false
+
+		for j := 0; ; j++ {
+			id := j % 5
+			nextId := (j + 1) % 5
+			// time.Sleep(1000 * time.Millisecond)
+			x, ampPtrs[id], ampStates[id], output, ampIpId[id] = intcodeProcess(id, ampPtrs[id], ampStates[id], ampIps, ampIpId[id], 0)
+			ampIps[nextId] = append(ampIps[nextId], output)
+			if x == true {
+				break
+			}
+		}
+
+		// fmt.Println(ampIps)
+
+		if maxOutput < ampIps[0][len(ampIps[0])-1] {
+			maxOutput = ampIps[0][len(ampIps[0])-1]
 		}
 	}
 	fmt.Println(maxOutput)
