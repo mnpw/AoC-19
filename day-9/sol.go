@@ -200,7 +200,7 @@ func main() {
 		fmt.Println("Len:", len(contents), "\nContents:", contents)
 	}
 	// fmt.Println(math.MaxInt64)
-	inSigVals := []int{1}
+	inSigVals := []int{2}
 	intcodeProcess(0, 0, contents, inSigVals, 0, 1)
 	// fmt.Println(sth)
 }
